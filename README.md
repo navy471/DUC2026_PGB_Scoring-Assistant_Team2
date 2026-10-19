@@ -1,1 +1,1 @@
-# DUC2026_PGB_Scoring-Assistant_Team2
+# DUC2026_PGB_Scoring-Assistant_Team​2
