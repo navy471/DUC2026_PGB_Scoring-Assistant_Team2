@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Navigate, Outlet, Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, FileText, Settings as SettingsIcon, LogOut, FileUp, AlertCircle, BookOpen, Printer, Bell, Users, Wand2, CheckSquare } from 'lucide-react';
+import { LayoutDashboard, FileText, Settings as SettingsIcon, LogOut, FileUp, AlertCircle, BookOpen, Printer, Bell, Users, CheckSquare } from 'lucide-react';
 
 export const DashboardLayout = () => {
   const { isAuthenticated, logout, user, token } = useAuth();
@@ -36,7 +36,6 @@ export const DashboardLayout = () => {
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Students', path: '/students', icon: Users },
     { name: 'Assessments', path: '/assessments', icon: FileText },
-    { name: 'AI Assistant', path: '/ai-assistant', icon: Wand2 },
     { name: 'Scan Upload', path: '/scans', icon: FileUp },
     { name: 'Verification', path: '/verification', icon: AlertCircle },
     { name: 'Gradebook', path: '/gradebook', icon: BookOpen },

@@ -30,6 +30,19 @@ export class StudentsController {
     };
   }
 
+  @Put('class/:className')
+  renameClass(@Param('className') className: string, @Body('new_class_name') newClassName: string) {
+    if (!newClassName || !newClassName.trim()) {
+      throw new BadRequestException('New class name is required');
+    }
+    return this.studentsService.renameClass(className, newClassName.trim());
+  }
+
+  @Delete('class/:className')
+  deleteClass(@Param('className') className: string) {
+    return this.studentsService.deleteClass(className);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.studentsService.findOne(id);

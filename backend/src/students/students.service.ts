@@ -38,6 +38,63 @@ export class StudentsService {
     }
   }
 
+  async renameClass(oldName: string, newName: string) {
+    if (!newName || !newName.trim()) {
+      throw new BadRequestException('New class name is required');
+    }
+    const cleanNew = newName.trim();
+
+    const studentUpdate = await this.prisma.student.updateMany({
+      where: { class_name: oldName },
+      data: { class_name: cleanNew }
+    });
+
+    await this.prisma.assessment.updateMany({
+      where: { class_name: oldName },
+      data: { class_name: cleanNew }
+    });
+
+    return { success: true, updatedStudents: studentUpdate.count, new_class_name: cleanNew };
+  }
+
+  async deleteClass(className: string) {
+    const students = await this.prisma.student.findMany({
+      where: { class_name: className },
+      select: { id: true }
+    });
+    const studentIds = students.map(s => s.id);
+
+    if (studentIds.length > 0) {
+      const grades = await this.prisma.grade.findMany({
+        where: { student_id: { in: studentIds } },
+        select: { id: true }
+      });
+      const gradeIds = grades.map(g => g.id);
+
+      if (gradeIds.length > 0) {
+        await this.prisma.verificationLog.deleteMany({
+          where: { grade_id: { in: gradeIds } }
+        });
+        await this.prisma.grade.deleteMany({
+          where: { student_id: { in: studentIds } }
+        });
+      }
+
+      await this.prisma.scannedPaper.updateMany({
+        where: { student_id: { in: studentIds } },
+        data: { student_id: null }
+      });
+
+      const deleteResult = await this.prisma.student.deleteMany({
+        where: { class_name: className }
+      });
+
+      return { success: true, deletedStudents: deleteResult.count };
+    }
+
+    return { success: true, deletedStudents: 0 };
+  }
+
   private extractDataFromWorksheet(worksheet: xlsx.WorkSheet) {
     const rows: any[][] = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
     
@@ -45,25 +102,40 @@ export class StudentsService {
       throw new BadRequestException('The uploaded file or sheet is empty.');
     }
 
-    let headerRowIndex = 0;
+    let headerRowIndex = -1;
     let headers: string[] = [];
     
-    // Scan up to first 10 rows to find the true header row (looks for ID/Name keywords)
-    for (let i = 0; i < Math.min(rows.length, 10); i++) {
+    // Scan up to first 30 rows to find the true header row (looks for ID/Number and Name keywords)
+    for (let i = 0; i < Math.min(rows.length, 30); i++) {
       const row = rows[i];
-      if (!row) continue;
-      const rowString = row.join(' ').toLowerCase().replace(/\s+/g, '');
-      if ((rowString.includes('អត្តលេខ') || rowString.includes('id') || rowString.includes('code')) &&
-          (rowString.includes('ឈ្មោះ') || rowString.includes('name'))) {
+      if (!row || row.length === 0) continue;
+      const rowString = row.filter(Boolean).map(c => String(c).trim().toLowerCase()).join(' ').replace(/\s+/g, '');
+      const hasId = rowString.includes('អត្តលេខ') || rowString.includes('ល.រ') || rowString.includes('លរ') || rowString.includes('id') || rowString.includes('code') || rowString.includes('លេខសម្គាល់');
+      const hasName = rowString.includes('ឈ្មោះ') || rowString.includes('គោត្តនាម') || rowString.includes('នាម') || rowString.includes('name');
+      if (hasId && hasName) {
         headerRowIndex = i;
-        // Generate valid header names, ensuring no duplicates or empty strings
         headers = row.map((col, idx) => col ? String(col).trim() : `__EMPTY_${idx}`);
         break;
       }
     }
 
-    if (headers.length === 0) {
-       // fallback to row 0 if no clear header row found
+    // Secondary scan: if only Name is found in a row with at least 2 non-empty cells
+    if (headerRowIndex === -1) {
+      for (let i = 0; i < Math.min(rows.length, 30); i++) {
+        const row = rows[i];
+        if (!row || row.length === 0) continue;
+        const nonEmpties = row.filter(Boolean);
+        const rowString = nonEmpties.map(c => String(c).trim().toLowerCase()).join(' ').replace(/\s+/g, '');
+        if (nonEmpties.length >= 2 && (rowString.includes('ឈ្មោះ') || rowString.includes('គោត្តនាម') || rowString.includes('នាម') || rowString.includes('name'))) {
+          headerRowIndex = i;
+          headers = row.map((col, idx) => col ? String(col).trim() : `__EMPTY_${idx}`);
+          break;
+        }
+      }
+    }
+
+    if (headerRowIndex === -1) {
+       headerRowIndex = 0;
        headers = (rows[0] || []).map((col, idx) => col ? String(col).trim() : `__EMPTY_${idx}`);
     }
 

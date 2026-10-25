@@ -57,33 +57,108 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, 
       const rawData: any[] = res.data.rawData;
       
       // 2. Auto-Magic Mapping
-      const mapping: any = { student_id: '', full_name: '', gender: '' };
-      
-      headers.forEach((h: string) => {
-        const normalized = h.toLowerCase().trim().replace(/\s+/g, '');
-        if (normalized.includes('id') || normalized.includes('code') || normalized.includes('អត្តលេខ')) {
-          mapping.student_id = h;
+      let idCol = '';
+      let nameCol = '';
+      let lastNameCol = '';
+      let firstNameCol = '';
+      let genderCol = '';
+
+      // Filter and clean headers
+      const safeHeaders = (headers || []).filter((h): h is string => Boolean(h && String(h).trim()));
+
+      safeHeaders.forEach((h: string) => {
+        const norm = String(h || '').toLowerCase().trim().replace(/\s+/g, '');
+        // Check for ID (prefer specific ID/code, fallback to ល.រ / no)
+        if (!idCol && (norm.includes('អត្តលេខ') || norm.includes('studentid') || norm.includes('student_id') || norm.includes('លេខសម្គាល់') || norm.includes('code') || norm.includes('id'))) {
+          idCol = h;
+        } else if (!idCol && (norm.includes('ល.រ') || norm.includes('លរ') || norm === 'no' || norm === 'nr' || norm === 'លរ.')) {
+          idCol = h;
         }
-        if (normalized.includes('name') || normalized.includes('ឈ្មោះ') || normalized.includes('fullname')) {
-          mapping.full_name = h;
+
+        // Check for Name (combined or separate)
+        if (norm.includes('គោត្តនាម') && norm.includes('នាម')) {
+          nameCol = h;
+        } else if (norm.includes('គោត្តនាម')) {
+          lastNameCol = h;
+        } else if (norm.includes('នាម') && !lastNameCol) {
+          nameCol = h;
+        } else if (norm.includes('ឈ្មោះ') || norm.includes('name') || norm.includes('fullname')) {
+          nameCol = h;
         }
-        if (normalized.includes('gender') || normalized.includes('sex') || normalized.includes('ភេទ')) {
-          mapping.gender = h;
+
+        // Check for Gender
+        if (norm.includes('ភេទ') || norm.includes('gender') || norm.includes('sex')) {
+          genderCol = h;
         }
       });
 
-      if (!mapping.student_id || !mapping.full_name) {
-        throw new Error(`Auto-Mapping Failed: Could not find columns for 'អត្តលេខ' (ID) or 'ឈ្មោះ' (Name). Found headers: ${headers.join(', ')}`);
+      // If separate first and last name columns exist
+      if (!nameCol && lastNameCol) {
+        firstNameCol = safeHeaders.find((h: string) => {
+          const n = String(h || '').toLowerCase().trim().replace(/\s+/g, '');
+          return n.includes('នាម') && !n.includes('គោត្ត');
+        }) || '';
       }
 
-      // 3. Prepare Mapped Data
-      const mappedData = rawData.map(row => ({
-        student_id: row[mapping.student_id],
-        full_name: row[mapping.full_name],
-        gender: mapping.gender ? row[mapping.gender] : null,
-        class_name: targetClass.trim(), // Force target class
-        import_source: importSource === 'FILE' ? 'EXCEL' : 'GOOGLE_SHEET'
-      }));
+      // Fallback for ID: if still missing, look for any column with 'ល.រ' or 'id'
+      if (!idCol) {
+        idCol = safeHeaders.find((h: string) => {
+          const n = String(h || '').toLowerCase().trim().replace(/\s+/g, '');
+          return n.includes('ល.រ') || n.includes('លរ') || n.includes('no') || n.includes('id');
+        }) || '';
+      }
+
+      if (!nameCol && !lastNameCol) {
+        throw new Error(`Auto-Mapping Failed: Could not find columns for 'ឈ្មោះ' (Name) or 'គោត្តនាម និង នាម'. Found headers: ${safeHeaders.join(', ')}`);
+      }
+
+      // 3. Prepare Mapped Data (filter out empty rows/subheaders)
+      const validRows = rawData.filter(row => {
+        const nameVal = nameCol ? row[nameCol] : (lastNameCol ? row[lastNameCol] : null);
+        return nameVal && String(nameVal).trim() !== '' && String(nameVal).trim() !== 'null';
+      });
+
+      if (validRows.length === 0) {
+        throw new Error('No valid student rows found in file.');
+      }
+
+      const mappedData = validRows.map((row, idx) => {
+        let fullName = '';
+        if (lastNameCol && firstNameCol && row[lastNameCol]) {
+          fullName = `${String(row[lastNameCol]).trim()} ${String(row[firstNameCol] || '').trim()}`.trim();
+        } else if (nameCol && row[nameCol]) {
+          fullName = String(row[nameCol]).trim();
+        }
+
+        let rawId = idCol && row[idCol] != null ? String(row[idCol]).trim() : '';
+        let studentId = rawId;
+        const cleanClass = targetClass.trim().replace(/\s+/g, '');
+        // If ID is pure digits (e.g. 1, 2, 3 from 'ល.រ') or empty, format as CLASS-001
+        if (!studentId || /^\d+$/.test(studentId)) {
+          const num = studentId ? studentId.padStart(3, '0') : String(idx + 1).padStart(3, '0');
+          studentId = cleanClass ? `${cleanClass}-${num}` : `STU-${num}`;
+        }
+
+        let gender: string | null = null;
+        if (genderCol && row[genderCol]) {
+          const g = String(row[genderCol]).trim().toLowerCase();
+          if (g === 'ប្រុស' || g === 'm' || g === 'male' || g === 'ប') {
+            gender = 'ប';
+          } else if (g === 'ស្រី' || g === 'f' || g === 'female' || g === 'ស') {
+            gender = 'ស';
+          } else {
+            gender = String(row[genderCol]).trim();
+          }
+        }
+
+        return {
+          student_id: studentId,
+          full_name: fullName,
+          gender: gender,
+          class_name: targetClass.trim(),
+          import_source: importSource === 'FILE' ? 'EXCEL' : 'GOOGLE_SHEET'
+        };
+      });
 
       // 4. Confirm Import
       await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/students/confirm-import`, { mapped_data: mappedData }, {

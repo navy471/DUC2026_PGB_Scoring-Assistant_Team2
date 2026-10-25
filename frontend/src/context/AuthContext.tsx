@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
 
 interface User {
   id: string;
@@ -30,6 +31,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(JSON.parse(storedUser));
     }
     setLoading(false);
+
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401 && !error.config?.url?.includes('/auth/login')) {
+          logout();
+          window.location.href = '/login';
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
   }, []);
 
   const login = (userData: User, jwtToken: string) => {

@@ -19,6 +19,11 @@ export const StudentList = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  // Class Management State
+  const [editingClass, setEditingClass] = useState<{ oldName: string; newName: string } | null>(null);
+  const [deleteClassTarget, setDeleteClassTarget] = useState<string | null>(null);
+  const [isSubmittingClass, setIsSubmittingClass] = useState(false);
   
   const [form, setForm] = useState({ student_code: '', name: '', class_name: '', gender: '' });
   
@@ -68,6 +73,46 @@ export const StudentList = () => {
       fetchStudents();
     } catch (e) {
       alert('Cannot delete student. They may have existing grades or scans.');
+    }
+  };
+
+  const handleRenameClassSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingClass || !editingClass.newName.trim()) return;
+    setIsSubmittingClass(true);
+    try {
+      await axios.put(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/students/class/${encodeURIComponent(editingClass.oldName)}`,
+        { new_class_name: editingClass.newName.trim() },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (selectedClass === editingClass.oldName) {
+        setSelectedClass(editingClass.newName.trim());
+      }
+      setEditingClass(null);
+      fetchStudents();
+    } catch (e: any) {
+      alert('Error renaming class: ' + (e.response?.data?.message || e.message));
+    } finally {
+      setIsSubmittingClass(false);
+    }
+  };
+
+  const handleDeleteClassConfirm = async () => {
+    if (!deleteClassTarget) return;
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/students/class/${encodeURIComponent(deleteClassTarget)}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (selectedClass === deleteClassTarget) {
+        setSelectedClass(null);
+        setViewMode('classes');
+      }
+      setDeleteClassTarget(null);
+      fetchStudents();
+    } catch (e: any) {
+      alert('Error deleting class: ' + (e.response?.data?.message || e.message));
     }
   };
 
@@ -157,13 +202,38 @@ export const StudentList = () => {
         {(viewMode === 'all' || viewMode === 'class-detail') && (
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between gap-4">
           {viewMode === 'class-detail' && (
-            <button 
-              onClick={() => { setViewMode('classes'); setSelectedClass(null); setSearch(''); }}
-              className="flex items-center space-x-2 text-slate-500 hover:text-indigo-600 font-bold px-4 py-3 bg-slate-50 hover:bg-indigo-50 rounded-xl transition-colors shrink-0"
-            >
-              <ChevronLeft className="w-5 h-5" />
-              <span>Back</span>
-            </button>
+            <div className="flex items-center space-x-2 shrink-0">
+              <button 
+                onClick={() => { setViewMode('classes'); setSelectedClass(null); setSearch(''); }}
+                className="flex items-center space-x-2 text-slate-500 hover:text-indigo-600 font-bold px-4 py-3 bg-slate-50 hover:bg-indigo-50 rounded-xl transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5" />
+                <span>Back</span>
+              </button>
+              {selectedClass && (
+                <div className="flex items-center space-x-2 pl-2 border-l border-slate-200">
+                  <span className="font-extrabold text-slate-800 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-xl text-sm border border-indigo-100">
+                    Class: {selectedClass}
+                  </span>
+                  <button 
+                    onClick={() => setEditingClass({ oldName: selectedClass, newName: selectedClass })}
+                    className="flex items-center space-x-1.5 text-xs font-bold text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-3 py-2 rounded-xl transition-all shadow-sm"
+                    title="Rename this class"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                    <span>Rename</span>
+                  </button>
+                  <button 
+                    onClick={() => setDeleteClassTarget(selectedClass)}
+                    className="flex items-center space-x-1.5 text-xs font-bold text-red-700 hover:text-red-800 bg-red-50 hover:bg-red-100 border border-red-200 px-3 py-2 rounded-xl transition-all shadow-sm"
+                    title="Delete this class"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete</span>
+                  </button>
+                </div>
+              )}
+            </div>
           )}
           
           <div className="flex-1 relative">
@@ -208,19 +278,19 @@ export const StudentList = () => {
       {viewMode === 'classes' && (
         <div className="mt-4 flex flex-col space-y-2 pb-8">
           {/* Header Row */}
-          <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_120px] gap-4 px-8 py-3 text-slate-500 font-black text-xs uppercase tracking-widest">
+          <div className="grid grid-cols-[1.4fr_1fr_1fr_1fr_180px] gap-4 px-8 py-3 text-slate-500 font-black text-xs uppercase tracking-widest">
             <div>Class Name</div>
             <div>Total Students</div>
             <div>Male Students</div>
             <div>Female Students</div>
-            <div className="text-right pr-2">Action</div>
+            <div className="text-right pr-2">Actions</div>
           </div>
 
           {uniqueClasses.map(c => (
             <div 
               key={c}
               onClick={() => { setViewMode('class-detail'); setSelectedClass(c); }}
-              className="grid grid-cols-[1.5fr_1fr_1fr_1fr_120px] gap-4 px-8 py-2.5 items-center bg-white rounded-2xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-slate-100 group hover:bg-indigo-600 hover:shadow-xl hover:shadow-indigo-500/30 hover:-translate-y-0.5 hover:border-indigo-500 transition-all duration-300 cursor-pointer"
+              className="grid grid-cols-[1.4fr_1fr_1fr_1fr_180px] gap-4 px-8 py-2.5 items-center bg-white rounded-2xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-slate-100 group hover:bg-indigo-600 hover:shadow-xl hover:shadow-indigo-500/30 hover:-translate-y-0.5 hover:border-indigo-500 transition-all duration-300 cursor-pointer"
             >
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold group-hover:bg-indigo-500 group-hover:text-white transition-colors shrink-0 shadow-inner">
@@ -247,11 +317,27 @@ export const StudentList = () => {
                 </span>
               </div>
               
-              <div className="flex justify-end">
+              <div className="flex justify-end items-center space-x-2" onClick={e => e.stopPropagation()}>
                 <button 
-                  className="px-4 py-1.5 text-sm font-bold text-slate-500 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-100 rounded-lg transition-all group-hover:bg-indigo-500 group-hover:text-white group-hover:hover:bg-white group-hover:hover:text-indigo-600 shadow-sm"
+                  onClick={() => { setViewMode('class-detail'); setSelectedClass(c); }}
+                  className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50 rounded-lg transition-all group-hover:bg-indigo-500 group-hover:text-white group-hover:hover:bg-white group-hover:hover:text-indigo-600 shadow-sm"
+                  title="View Students"
                 >
                   View
+                </button>
+                <button 
+                  onClick={() => setEditingClass({ oldName: c, newName: c })}
+                  className="p-1.5 text-slate-400 hover:text-amber-600 bg-slate-50 hover:bg-amber-50 rounded-lg transition-all group-hover:bg-indigo-500 group-hover:text-white group-hover:hover:bg-white group-hover:hover:text-amber-600 shadow-sm"
+                  title="Edit Class Name"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={() => setDeleteClassTarget(c)}
+                  className="p-1.5 text-slate-400 hover:text-red-600 bg-slate-50 hover:bg-red-50 rounded-lg transition-all group-hover:bg-indigo-500 group-hover:text-white group-hover:hover:bg-white group-hover:hover:text-red-600 shadow-sm"
+                  title="Delete Class"
+                >
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -390,6 +476,86 @@ export const StudentList = () => {
           if (deleteTargetId) handleDelete(deleteTargetId);
         }}
         onCancel={() => setDeleteTargetId(null)}
+      />
+
+      {/* Edit Class Name Modal */}
+      {editingClass && createPortal(
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] animate-fade-in p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-slide-up border border-slate-100">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                  <Edit2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">Edit Class Name</h2>
+                  <p className="text-xs text-slate-500 font-medium">Rename this class across all students</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setEditingClass(null)} 
+                className="p-2 text-slate-400 hover:bg-white hover:text-slate-600 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleRenameClassSubmit} className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Current Class Name</label>
+                  <input 
+                    type="text" 
+                    value={editingClass.oldName} 
+                    disabled 
+                    className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-slate-500 font-bold cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">New Class Name</label>
+                  <input 
+                    type="text" 
+                    value={editingClass.newName} 
+                    onChange={e => setEditingClass({ ...editingClass, newName: e.target.value })}
+                    placeholder="e.g. 10A, PGB_2"
+                    required
+                    autoFocus
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-8 pt-6 border-t border-slate-100">
+                <button 
+                  type="button" 
+                  onClick={() => setEditingClass(null)} 
+                  className="px-5 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isSubmittingClass || !editingClass.newName.trim() || editingClass.newName.trim() === editingClass.oldName}
+                  className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all shadow-lg shadow-indigo-600/30 cursor-pointer"
+                >
+                  {isSubmittingClass ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Delete Class Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteClassTarget !== null}
+        title={`Delete Class "${deleteClassTarget}"?`}
+        message={`Are you sure you want to delete class "${deleteClassTarget}"? This will remove all ${deleteClassTarget ? (classStats[deleteClassTarget]?.total || 0) : 0} student(s) in this class. This action cannot be undone.`}
+        confirmText="Delete Class"
+        isDestructive={true}
+        onConfirm={handleDeleteClassConfirm}
+        onCancel={() => setDeleteClassTarget(null)}
       />
 
       <StudentImportModal 
