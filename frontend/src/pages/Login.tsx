@@ -39,7 +39,7 @@ export const Login = () => {
             <BookOpen className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Welcome Back</h2>
-          <p className="text-slate-500 mt-2">Sign in to SmartGrade</p>
+          <p className="text-slate-500 mt-2">Sign in to Scoring Assistant</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-5">

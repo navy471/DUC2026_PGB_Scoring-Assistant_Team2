@@ -46,11 +46,11 @@ export const DashboardLayout = () => {
     <div className="h-screen overflow-hidden bg-[#f8fafc] flex text-slate-800 print:bg-white print:h-auto print:block">
       {/* Sidebar */}
       <aside className="w-64 bg-white/80 backdrop-blur-xl border-r border-slate-200/60 flex flex-col shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)] z-20 print:hidden">
-        <div className="h-20 flex items-center px-8 border-b border-slate-100">
-          <div className="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center mr-3 shadow-lg shadow-indigo-600/30">
+        <div className="h-20 flex items-center px-6 border-b border-slate-100">
+          <div className="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center mr-3 shadow-lg shadow-indigo-600/30 shrink-0">
             <span className="text-white font-bold text-lg">S</span>
           </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent tracking-tight">SmartGrade</span>
+          <span className="text-lg font-extrabold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent tracking-tight whitespace-nowrap">Scoring Assistant</span>
         </div>
         
         <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
