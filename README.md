@@ -1,88 +1,104 @@
-# Smart Grade Entry (ប្រព័ន្ធស្វ័យប្រវត្តិកម្មបញ្ចូលពិន្ទុឆ្លាតវៃ)
+# Scoring Assistant (ប្រព័ន្ធស្វ័យប្រវត្តិកម្មបញ្ចូលពិន្ទុឆ្លាតវៃ)
 
-Smart Grade Entry is an AI-powered automated grading and student management system that leverages OCR (Optical Character Recognition) to extract, recognize, and verify student IDs and scores directly from scanned exam papers.
+Scoring Assistant គឺជាប្រព័ន្ធ AI ស្វ័យប្រវត្តិកម្មសម្រាប់ជួយសម្រួលដល់ការបញ្ចូលពិន្ទុ និងគ្រប់គ្រងសិស្ស-ថ្នាក់រៀន ដោយប្រើប្រាស់បច្ចេកវិទ្យា OCR (Optical Character Recognition) ដើម្បីចាប់យកអត្តលេខសិស្ស និងពិន្ទុពីក្រដាសប្រឡងដែលបានស្កេនដោយស្វ័យប្រវត្តិ។
 
 ---
 
-## 💻 Programming Languages (ភាសាកូដដែលប្រើប្រាស់)
+## 🏗️ ប្រព័ន្ធស្ថាបត្យកម្មរួម (System Architecture Overview)
 
-| Language | Usage / កន្លែងប្រើប្រាស់ | Details |
+```mermaid
+graph LR
+    User[Teacher / Admin] -->|Interacts with| Frontend[🎨 Frontend: React + Vite + TailwindCSS]
+    Frontend -->|REST APIs + JWT| Backend[⚙️ Backend: NestJS + Node.js]
+    Backend -->|Prisma ORM| Database[(🗄️ Database: PostgreSQL)]
+    Backend -->|OCR Processing| AI[🧠 OCR Engine: Tesseract.js + Jimp/Sharp]
+```
+
+---
+
+## 🎨 ១. Frontend (បច្ចេកវិទ្យាផ្នែកខាងមុខ)
+
+ផ្នែក Frontend ត្រូវបានបង្កើតឡើងយ៉ាងទំនើប (Modern UI/UX) ផ្ដោតលើល្បឿន និងភាពងាយស្រួលប្រើប្រាស់សម្រាប់លោកគ្រូ-អ្នកគ្រូ៖
+
+| បច្ចេកវិទ្យា (Technology) | កំណែ (Version) | តួនាទី និងការប្រើប្រាស់ (Role & Usage) |
 | :--- | :--- | :--- |
-| **TypeScript** | **Frontend & Backend (Core)** | ប្រើប្រាស់ជាភាសាចម្បងទាំងសងខាង ដើម្បីសុវត្ថិភាព Type-safety និង Clean Architecture |
-| **JavaScript (ESNext)** | Tooling & Runtime | ដំណើរការលើ Node.js Runtime និង Build scripts |
-| **HTML5 & CSS3** | User Interface | រៀបចំរចនាសម្ព័ន្ធទំព័រ និងកំណត់ Styling ជាមួយ Tailwind CSS |
-| **SQL** | Database Management | គ្រប់គ្រង Schema និង Query ទិន្នន័យតាមរយៈ Prisma ORM |
-| **PowerShell** | DevOps / Automation | Script សម្រាប់បញ្ជាបើកប្រព័ន្ធទាំងអស់ដោយចុចតែម្តង (`run-all.ps1`) |
+| **React** | `v19` | Library ចម្បងសម្រាប់បង្កើត User Interface បែប Single Page Application (SPA) |
+| **Vite** | `v8` | Frontend Build Tool & Dev Server ដែលមានល្បឿនលឿនបំផុត (Lightning-fast HMR) |
+| **TypeScript** | `v5+` | ភាសាកូដចម្បងដែលផ្ដល់នូវ Type Safety និងកាត់បន្ថយ Bug |
+| **Tailwind CSS** | `v3` | Utility-first CSS Framework សម្រាប់រចនា Interface បែប Glassmorphism ស្រស់ស្អាត |
+| **React Router DOM** | `v7` | គ្រប់គ្រង Route ទំព័រទាំងអស់ក្នុងប្រព័ន្ធ (`/students`, `/assessments`, `/verification`...) |
+| **Axios** | `v1.20` | HTTP Client សម្រាប់ទាក់ទងជាមួយ Backend API ព្រមទាំងមាន 401 Auto-Auth Interceptors |
+| **Lucide React** | Latest | បណ្តុំ Icons ដ៏ស្រស់ស្អាត និងទាន់សម័យទូទាំងប្រព័ន្ធ |
+| **Vercel** | Cloud | ទីតាំង Host ផ្នែក Frontend លើអ៊ីនធឺណិត (`smart-grade-vert.vercel.app`) |
 
 ---
 
-## 🗄️ Database (ប្រព័ន្ធផ្ទុកទិន្នន័យ)
+## ⚙️ ២. Backend (បច្ចេកវិទ្យាផ្នែកខាងក្រោយ)
 
-| Component | Technology | Description |
+ផ្នែក Backend ត្រូវបានបង្កើតឡើងតាមស្ថាបត្យកម្មកម្រិតសហគ្រាស (Enterprise-grade Modular Architecture)៖
+
+| បច្ចេកវិទ្យា (Technology) | កំណែ (Version) | តួនាទី និងការប្រើប្រាស់ (Role & Usage) |
 | :--- | :--- | :--- |
-| **Database Engine** | **PostgreSQL (v15+)** | ប្រព័ន្ធទិន្នន័យប្រភេទ Relational Database (SQL) ដែលមានសុវត្ថិភាព និងល្បឿនលឿន |
-| **ORM / Migration** | **Prisma ORM** | ឧបករណ៍គ្រប់គ្រង Database Schema, Migrations, និងបង្កើត Type-safe Client ដោយស្វ័យប្រវត្តិ |
-| **Local Environment** | **Docker & Docker Compose** | ដំណើរការ PostgreSQL ក្នុង Docker Container (`postgres:15`) លើ Port `5433` |
-| **Production Cloud** | **PostgreSQL Cloud / Render** | ភ្ជាប់ទៅកាន់ Cloud PostgreSQL សម្រាប់បម្រើការលើប្រព័ន្ធ Online |
+| **NestJS** | `v12` | Progressive Node.js Framework បែប Modular (Controllers, Services, Modules) |
+| **Node.js** | `v20+` | JavaScript/TypeScript Server-side Runtime Environment |
+| **TypeScript** | `v5+` | ភាសាសរសេរកូដ Backend ទាំងស្រុងតាមបែប Object-Oriented Programming (OOP) |
+| **JWT & Passport** | `v12` | ប្រព័ន្ធសុវត្ថិភាព និង Authentication (JSON Web Tokens) ការពារ API Endpoints |
+| **Multer** | Latest | Middleware សម្រាប់គ្រប់គ្រងការ Upload ឯកសារ (រូបភាពក្រដាសប្រឡង, ឯកសារ Excel) |
+| **Tesseract.js** | `v7` | AI OCR Engine សម្រាប់អានអក្សរ និងលេខពីក្រដាសប្រឡង (`khm.traineddata` & `eng.traineddata`) |
+| **Sharp & Jimp** | Latest | Image Processing សម្រាប់កែច្នៃ បង្កើនកម្រិត Contrast និងកាត់រូបភាពមុនធ្វើ OCR |
+| **SheetJS (XLSX)** | Latest | Parser សម្រាប់អាន និងទាញយកទិន្នន័យពី Excel/CSV តាមទម្រង់តារាងកម្ពុជា |
+| **Render Cloud** | Cloud | ទីតាំង Host ផ្នែក Backend API លើអ៊ីនធឺណិត (`smartgrade-2t2x.onrender.com`) |
 
 ---
 
-## 🛠️ Complete Tech Stack (បច្ចេកវិទ្យាទាំងអស់ដែលប្រើ)
+## 🗄️ ៣. Database (ប្រព័ន្ធផ្ទុកទិន្នន័យ)
 
-### 🎨 Frontend
-- **Framework**: React 18 / 19 with Vite (Fast HMR & Optimized Bundling)
-- **Styling**: Tailwind CSS & Modern Glassmorphism Design
-- **Icons**: Lucide React
-- **Routing**: React Router DOM (v7)
-- **HTTP Client**: Axios with Auto-Auth Interceptors
-- **Deployment**: Vercel (`smart-grade-vert.vercel.app`)
+ប្រព័ន្ធទិន្នន័យត្រូវបានរចនាឡើងយ៉ាងរឹងមាំដើម្បីរក្សាទុកព័ត៌មានសិស្ស ថ្នាក់រៀន មុខវិជ្ជា ពិន្ទុ និងរូបភាពស្កេន៖
 
-### ⚙️ Backend
-- **Framework**: NestJS (Node.js Enterprise Architecture)
-- **Security & Auth**: Passport.js, JWT (JSON Web Tokens), BCrypt
-- **File Uploads**: Multer
-- **API Spec**: RESTful APIs with CORS Support for Cloud & Localhost
-- **Deployment**: Render Cloud (`smartgrade-2t2x.onrender.com`)
+| ធាតុផ្សំ (Component) | បច្ចេកវិទ្យា (Technology) | សេចក្ដីលម្អិត និងតួនាទី (Details & Functionality) |
+| :--- | :--- | :--- |
+| **Database Engine** | **PostgreSQL (v15+)** | ប្រព័ន្ធទិន្នន័យប្រភេទ **Relational Database (SQL)** ដែលមានល្បឿនលឿន សុវត្ថិភាពខ្ពស់ និងអាចទុកទិន្នន័យបានច្រើន |
+| **ORM & Migrations** | **Prisma ORM (v5.22)** | គ្រប់គ្រង Database Schema, បង្កើត Migrations និងផ្តល់នូវ Type-safe Database Client |
+| **Local Database** | **Docker & Docker Compose** | ដំណើរការ PostgreSQL ក្នុង Container (`postgres:15`) នៅលើ Port `5433` (ងាយស្រួលដល់ការ Dev) |
+| **Cloud Database** | **PostgreSQL on Cloud** | ប្រព័ន្ធ Database លើ Cloud (Render / Supabase / Neon) សម្រាប់ដំណើរការលើ Production |
 
-### 🧠 AI & OCR Engine (ការសម្គាល់អក្សរ និងពិន្ទុ)
-- **OCR Engine**: Tesseract.js
-- **Language Models**:
-  - `khm.traineddata` (គាំទ្រការអានអក្សរខ្មែរ)
-  - `eng.traineddata` (គាំទ្រការអានលេខ និងអក្សរអង់គ្លេស)
-- **Image Processing**: Sharp & Jimp (សម្រាប់កាត់ បង្វិល បង្កើនកម្រិតច្បាស់ និង Contrast នៃក្រដាសប្រឡង)
-- **Data Import**: SheetJS (XLSX) & ExcelJS (គាំទ្រ Auto-Mapping តារាងសិស្សកម្ពុជា)
+### 📊 តារាងទិន្នន័យចម្បងក្នុង Database (Database Models):
+- 🧑‍🎓 **`User`**: រក្សាទុកគណនីគ្រូបង្រៀន និងអ្នកគ្រប់គ្រង (Admin / Teacher)
+- 🎒 **`Student`**: រក្សាទុកព័ត៌មានសិស្ស (Student ID, ឈ្មោះ, ភេទ, ថ្នាក់រៀន `class_name`...)
+- 📚 **`Subject`**: រក្សាទុកព័ត៌មានមុខវិជ្ជា (គណិតវិទ្យា, រូបវិទ្យា...)
+- 📝 **`Assessment`**: រក្សាទុកការប្រឡង (ឈ្មោះការប្រឡង, ពិន្ទុអតិបរមា, កាលបរិច្ឆេទ...)
+- 📷 **`ScannedPaper` & `ScanBatch`**: រក្សាទុក File រូបភាពក្រដាសប្រឡងដែលបានស្កេន
+- 🎯 **`Grade`**: រក្សាទុកពិន្ទុ និងស្ថានភាពនៃការផ្ទៀងផ្ទាត់ (Pending / Verified)
 
 ---
 
-## ✨ Key Features (មុខងារសំខាន់ៗ)
+## 💻 ៤. Programming Languages (ភាសាកូដដែលប្រើប្រាស់)
 
-- 📄 **Exam Paper Scanner & OCR**: ស្កេន និងចាប់យកអត្តលេខសិស្ស និងពិន្ទុដោយស្វ័យប្រវត្តិតាមរយៈ AI
-- 🔍 **Interactive Verification**: ផ្ទាំងផ្ទៀងផ្ទាត់ពិន្ទុ និងរូបភាពក្រដាសប្រឡងជាក់ស្ដែងសម្រាប់គ្រូបង្រៀន
-- 👥 **Student & Class Roster**:
-  - បង្កើត កែប្រែ (Rename) និងលុប (Delete) ថ្នាក់រៀន
-  - Auto-Sync ទិន្នន័យសិស្សពី Excel/CSV និង Google Sheets តាមទម្រង់ផ្លូវការរបស់កម្ពុជា
-- 📊 **Gradebook & Reports**: បូកសរុបពិន្ទុ គណនាភាគរយ និង Export ជា Excel
-- 🔐 **Role-based Authentication**: ប្រព័ន្ធ Login សុវត្ថិភាពសម្រាប់គ្រូបង្រៀន និងអ្នកគ្រប់គ្រង
+- **TypeScript**: ភាសាស្នូល **៩០%+** នៃគម្រោងទាំងមូល (ប្រើទាំង Frontend និង Backend)
+- **JavaScript (ESNext)**: ប្រើប្រាស់សម្រាប់ Configuration, Build Scripts និង Tooling
+- **HTML5 & CSS3**: ប្រើប្រាស់សម្រាប់រៀបចំ Layout និង Styling
+- **SQL**: ប្រើប្រាស់តាមរយៈ Prisma Schema និង Query ទៅកាន់ PostgreSQL
+- **PowerShell**: ប្រើប្រាស់សម្រាប់ Script បញ្ជា Run ប្រព័ន្ធទាំងអស់ (`run-all.ps1`)
 
 ---
 
-## 🚀 Getting Started (ការតម្លើង និងដំណើរការ)
+## 🚀 ការតម្លើង និងដំណើរការប្រព័ន្ធ (Getting Started)
 
-### 1. Prerequisites (តម្រូវការជាមុន)
-- [Node.js](https://nodejs.org/) (v18+)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (សម្រាប់ Database)
+### ១. តម្រូវការជាមុន (Prerequisites)
+- [Node.js](https://nodejs.org/) (Version 18 ឬ 20+)
+- [Docker Desktop](https://www.docker.com/) (សម្រាប់ដំណើរការ PostgreSQL Database លើម៉ាស៊ីន)
 
-### 2. Run All Services (វិធីរហ័ស)
-បើក PowerShell នៅក្នុង Folder គម្រោង រួចដំណើរការ៖
+### ២. ដំណើរការប្រព័ន្ធដោយស្វ័យប្រវត្តិ (Quick Start)
+បើក PowerShell នៅក្នុង Folder គម្រោង រួច Run Command តែមួយគត់៖
 ```powershell
 .\run-all.ps1
 ```
-Script នេះនឹង៖
-1. បើក Database លើ Docker Container (`localhost:5433`)
-2. បើក Backend NestJS (`http://localhost:3000`)
-3. បើក Frontend Vite (`http://localhost:5173`)
+Script នេះនឹងចាប់ផ្តើមដំណើរការ៖
+1. 🐳 **PostgreSQL Database** លើ Docker Container (Port `5433`)
+2. ⚙️ **Backend NestJS** (Port `3000`)
+3. 🎨 **Frontend Vite** (Port `5173`)
 
-### 3. Default Credentials (គណនីចូលប្រើ)
+### ៣. គណនី Default សម្រាប់ចូលប្រើប្រាស់
 - **URL**: `http://localhost:5173/login`
 - **Email**: `teacher@example.com`
 - **Password**: `password123`
