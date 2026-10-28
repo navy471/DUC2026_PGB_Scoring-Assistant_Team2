@@ -4,6 +4,26 @@ Scoring Assistant គឺជាប្រព័ន្ធ AI ស្វ័យប្�
 
 ---
 
+## 🚀 តំណភ្ជាប់ប្រព័ន្ធផ្សាយផ្ទាល់ (Live Deployment Links)
+
+> [!TIP]
+> **ប្រព័ន្ធត្រូវបានដាក់ឱ្យដំណើរការលើ Cloud ជាសាធារណៈ (100% Live)** អ្នកអាចចូលប្រើប្រាស់បានភ្លាមៗទាំងលើកុំព្យូទ័រ និងទូរស័ព្ទដៃ៖
+
+| សេវាកម្ម (Service) | វេទិកា (Platform) | ស្ថានភាព (Status) | តំណភ្ជាប់ផ្ទាល់ (Direct Link) |
+| :--- | :--- | :--- | :--- |
+| 🎨 **Frontend Web App** | **Vercel** | [![Vercel](https://img.shields.io/badge/Vercel-Live-success?style=flat&logo=vercel)](https://duc2026pgbscoring-assistant.vercel.app) | 👉 **[duc2026pgbscoring-assistant.vercel.app](https://duc2026pgbscoring-assistant.vercel.app)** |
+| ⚙️ **Backend REST API** | **Render** | [![Render](https://img.shields.io/badge/Render-Live-success?style=flat&logo=render)](https://pgb-scoring-assistant-team2.onrender.com) | 👉 **[pgb-scoring-assistant-team2.onrender.com](https://pgb-scoring-assistant-team2.onrender.com)** |
+| 🗄️ **Database Engine** | **Supabase** | [![Supabase](https://img.shields.io/badge/Supabase-Connected-success?style=flat&logo=supabase)](https://supabase.com) | ☁️ **Cloud PostgreSQL** (Managed) |
+| 🐙 **Source Code Repo** | **GitHub** | [![GitHub](https://img.shields.io/badge/GitHub-Repo-blue?style=flat&logo=github)](https://github.com/navy471/DUC2026_PGB_Scoring-Assistant_Team2) | 📦 **[DUC2026_PGB_Scoring-Assistant_Team2](https://github.com/navy471/DUC2026_PGB_Scoring-Assistant_Team2)** |
+
+### 🔑 គណនីសម្រាប់ចូលប្រើប្រាស់សាកល្បង (Demo Login Credentials):
+* 🌐 **Website**: [https://duc2026pgbscoring-assistant.vercel.app](https://duc2026pgbscoring-assistant.vercel.app)
+* 📧 **Email**: `teacher@example.com`
+* 🔒 **Password**: `password123`
+*(គណនីនេះមានសិទ្ធិជា Administrator / Teacher សម្រាប់គ្រប់គ្រងទិន្នន័យ ស្កេន និងកែប្រែពិន្ទុទាំងអស់)*
+
+---
+
 ## 🏗️ ប្រព័ន្ធស្ថាបត្យកម្មរួម (System Architecture Overview)
 
 ```mermaid
