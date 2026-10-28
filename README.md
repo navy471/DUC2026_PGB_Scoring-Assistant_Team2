@@ -10,7 +10,7 @@ Scoring Assistant គឺជាប្រព័ន្ធ AI ស្វ័យប្�
 graph LR
     User[Teacher / Admin] -->|Interacts with| Frontend[🎨 Frontend: React + Vite + TailwindCSS]
     Frontend -->|REST APIs + JWT| Backend[⚙️ Backend: NestJS + Node.js]
-    Backend -->|Prisma ORM| Database[(🗄️ Database: PostgreSQL)]
+    Backend -->|Prisma ORM| Database[(🗄️ Database: Supabase PostgreSQL)]
     Backend -->|OCR Processing| AI[🧠 OCR Engine: Tesseract.js + Jimp/Sharp]
 ```
 
@@ -59,8 +59,7 @@ graph LR
 | :--- | :--- | :--- |
 | **Database Engine** | **PostgreSQL (v15+)** | ប្រព័ន្ធទិន្នន័យប្រភេទ **Relational Database (SQL)** ដែលមានល្បឿនលឿន សុវត្ថិភាពខ្ពស់ និងអាចទុកទិន្នន័យបានច្រើន |
 | **ORM & Migrations** | **Prisma ORM (v5.22)** | គ្រប់គ្រង Database Schema, បង្កើត Migrations និងផ្តល់នូវ Type-safe Database Client |
-| **Local Database** | **Docker & Docker Compose** | ដំណើរការ PostgreSQL ក្នុង Container (`postgres:15`) នៅលើ Port `5433` (ងាយស្រួលដល់ការ Dev) |
-| **Cloud Database** | **PostgreSQL on Cloud** | ប្រព័ន្ធ Database លើ Cloud (Render / Supabase / Neon) សម្រាប់ដំណើរការលើ Production |
+| **Cloud Database** | **Supabase (PostgreSQL)** | ប្រព័ន្ធ Cloud PostgreSQL Database ដំណើរការលើ Cloud ដោយផ្ទាល់ (មិនបាច់ប្រើ Docker) |
 
 ### 📊 តារាងទិន្នន័យចម្បងក្នុង Database (Database Models):
 - 🧑‍🎓 **`User`**: រក្សាទុកគណនីគ្រូបង្រៀន និងអ្នកគ្រប់គ្រង (Admin / Teacher)
@@ -86,7 +85,7 @@ graph LR
 
 ### ១. តម្រូវការជាមុន (Prerequisites)
 - [Node.js](https://nodejs.org/) (Version 18 ឬ 20+)
-- [Docker Desktop](https://www.docker.com/) (សម្រាប់ដំណើរការ PostgreSQL Database លើម៉ាស៊ីន)
+- គណនី [Supabase](https://supabase.com/) សម្រាប់ Database (មិនបាច់ដំឡើង Docker ឡើយ)
 
 ### ២. ដំណើរការប្រព័ន្ធដោយស្វ័យប្រវត្តិ (Quick Start)
 បើក PowerShell នៅក្នុង Folder គម្រោង រួច Run Command តែមួយគត់៖
@@ -94,7 +93,7 @@ graph LR
 .\run-all.ps1
 ```
 Script នេះនឹងចាប់ផ្តើមដំណើរការ៖
-1. 🐳 **PostgreSQL Database** លើ Docker Container (Port `5433`)
+1. 🗄️ **Supabase Database** (ភ្ជាប់ទៅកាន់ Cloud PostgreSQL ដោយស្វ័យប្រវត្តិ)
 2. ⚙️ **Backend NestJS** (Port `3000`)
 3. 🎨 **Frontend Vite** (Port `5173`)
 

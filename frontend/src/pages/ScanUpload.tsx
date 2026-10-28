@@ -157,7 +157,7 @@ export const ScanUpload = () => {
         <p className="text-slate-500 mt-2">Upload graded papers to automatically extract scores</p>
       </header>
 
-      <div className="glass-panel p-8 mb-8 border border-slate-200">
+      <div className="glass-panel p-4 sm:p-6 md:p-8 mb-8 border border-slate-200">
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <label className="block text-sm font-medium text-slate-700">Select Assessment</label>
@@ -183,7 +183,7 @@ export const ScanUpload = () => {
         </div>
 
         <div 
-          className="border-2 border-dashed border-indigo-200 rounded-2xl p-10 flex flex-col items-center justify-center text-center transition-colors bg-slate-50/30"
+          className="border-2 border-dashed border-indigo-200 rounded-2xl p-6 sm:p-8 md:p-10 flex flex-col items-center justify-center text-center transition-colors bg-slate-50/30"
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleFileDrop}
         >

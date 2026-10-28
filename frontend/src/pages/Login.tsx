@@ -21,8 +21,14 @@ export const Login = () => {
       });
       login(response.data.user, response.data.access_token);
       navigate('/');
-    } catch (error) {
-      alert('Login failed. Please check credentials.');
+    } catch (error: any) {
+      if (error?.response?.status === 401) {
+        alert('Login failed: អ៊ីមែល ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ (Invalid email or password)');
+      } else if (!error?.response) {
+        alert(`មិនអាចទាក់ទងទៅ Backend Server បានឡើយ (${import.meta.env.VITE_API_URL || 'http://localhost:3000'})\nសូមប្រាកដថា Backend កំពុងដំណើរការ!`);
+      } else {
+        alert(error?.response?.data?.message || 'Login failed. Please check credentials.');
+      }
     } finally {
       setLoading(false);
     }
