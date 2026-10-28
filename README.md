@@ -29,7 +29,7 @@ graph LR
 | **React Router DOM** | `v7` | គ្រប់គ្រង Route ទំព័រទាំងអស់ក្នុងប្រព័ន្ធ (`/students`, `/assessments`, `/verification`...) |
 | **Axios** | `v1.20` | HTTP Client សម្រាប់ទាក់ទងជាមួយ Backend API ព្រមទាំងមាន 401 Auto-Auth Interceptors |
 | **Lucide React** | Latest | បណ្តុំ Icons ដ៏ស្រស់ស្អាត និងទាន់សម័យទូទាំងប្រព័ន្ធ |
-| **Vercel** | Cloud | ទីតាំង Host ផ្នែក Frontend លើអ៊ីនធឺណិត (`smart-grade-vert.vercel.app`) |
+| **Vercel** | Cloud | ទីតាំង Host ផ្នែក Frontend លើអ៊ីនធឺណិត (`duc2026pgbscoring-assistant.vercel.app`) |
 
 ---
 
@@ -47,7 +47,7 @@ graph LR
 | **Tesseract.js** | `v7` | AI OCR Engine សម្រាប់អានអក្សរ និងលេខពីក្រដាសប្រឡង (`khm.traineddata` & `eng.traineddata`) |
 | **Sharp & Jimp** | Latest | Image Processing សម្រាប់កែច្នៃ បង្កើនកម្រិត Contrast និងកាត់រូបភាពមុនធ្វើ OCR |
 | **SheetJS (XLSX)** | Latest | Parser សម្រាប់អាន និងទាញយកទិន្នន័យពី Excel/CSV តាមទម្រង់តារាងកម្ពុជា |
-| **Render Cloud** | Cloud | ទីតាំង Host ផ្នែក Backend API លើអ៊ីនធឺណិត (`smartgrade-2t2x.onrender.com`) |
+| **Render Cloud** | Cloud | ទីតាំង Host ផ្នែក Backend API លើអ៊ីនធឺណិត (`pgb-scoring-assistant-team2.onrender.com`) |
 
 ---
 
