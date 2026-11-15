@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { createPortal } from 'react-dom';
-import { X, UploadCloud, Link as LinkIcon, CheckCircle, AlertTriangle, ArrowRight, Table, Wand2 } from 'lucide-react';
+import { X, UploadCloud, Link as LinkIcon, CheckCircle, AlertTriangle, ArrowRight, Table, Wand2, Lock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useSystemSettings } from '../../context/SystemSettingsContext';
 
 interface StudentImportModalProps {
   isOpen: boolean;
@@ -11,7 +12,9 @@ interface StudentImportModalProps {
 }
 
 export const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, onClose, onSuccess }) => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  const { settings } = useSystemSettings();
+  const isSheetAllowed = user?.role === 'ADMIN' || settings?.features?.allowGoogleSheetsSync;
   const [importSource, setImportSource] = useState<'FILE' | 'SHEET'>('FILE');
   const [sheetUrl, setSheetUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
@@ -131,20 +134,22 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, 
         }
 
         let rawId = idCol && row[idCol] != null ? String(row[idCol]).trim() : '';
+        const khmerNums = ['០', '១', '២', '៣', '៤', '៥', '៦', '៧', '៨', '៩'];
+        const asciiId = rawId.replace(/[០-៩]/g, d => String(khmerNums.indexOf(d))).trim();
         let studentId = rawId;
         const cleanClass = targetClass.trim().replace(/\s+/g, '');
-        // If ID is pure digits (e.g. 1, 2, 3 from 'ល.រ') or empty, format as CLASS-001
-        if (!studentId || /^\d+$/.test(studentId)) {
-          const num = studentId ? studentId.padStart(3, '0') : String(idx + 1).padStart(3, '0');
+        // If ID is pure digits (e.g. 1, 2, 3 or ១, ២, ៣ from 'ល.រ') or empty, format as CLASS-001
+        if (!studentId || /^\d+$/.test(asciiId)) {
+          const num = asciiId ? asciiId.padStart(3, '0') : String(idx + 1).padStart(3, '0');
           studentId = cleanClass ? `${cleanClass}-${num}` : `STU-${num}`;
         }
 
         let gender: string | null = null;
         if (genderCol && row[genderCol]) {
           const g = String(row[genderCol]).trim().toLowerCase();
-          if (g === 'ប្រុស' || g === 'm' || g === 'male' || g === 'ប') {
+          if (g === 'ប្រុស' || g === 'm' || g === 'male' || g === 'ប' || g === 'ប.') {
             gender = 'ប';
-          } else if (g === 'ស្រី' || g === 'f' || g === 'female' || g === 'ស') {
+          } else if (g === 'ស្រី' || g === 'f' || g === 'female' || g === 'ស' || g === 'ស.') {
             gender = 'ស';
           } else {
             gender = String(row[genderCol]).trim();
@@ -168,7 +173,11 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, 
       onSuccess();
       onClose();
     } catch (e: any) {
-      setError(e.response?.data?.message || e.message || 'An error occurred during import.');
+      if (e.message === 'Network Error' || e.code === 'ERR_NETWORK') {
+        setError('មិនអាចភ្ជាប់ទៅកាន់ Backend Server បានឡើយ។ សូមប្រាកដថា Backend កំពុងដំណើរការលើ Port 3000!');
+      } else {
+        setError(e.response?.data?.message || e.message || 'An error occurred during import.');
+      }
     }
     setIsProcessing(false);
   };
@@ -212,8 +221,29 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, 
 
             {/* Source Selection */}
             <div className="flex space-x-2 bg-slate-100 p-1 rounded-xl">
-              <button onClick={() => setImportSource('FILE')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${importSource === 'FILE' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Excel / CSV File</button>
-              <button onClick={() => setImportSource('SHEET')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${importSource === 'SHEET' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Google Sheets</button>
+              <button 
+                type="button"
+                onClick={() => setImportSource('FILE')} 
+                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${importSource === 'FILE' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Excel / CSV File
+              </button>
+              <button 
+                type="button"
+                disabled={!isSheetAllowed}
+                onClick={() => isSheetAllowed && setImportSource('SHEET')} 
+                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                  !isSheetAllowed 
+                    ? 'opacity-40 cursor-not-allowed text-slate-400' 
+                    : importSource === 'SHEET' 
+                      ? 'bg-white text-indigo-600 shadow-sm' 
+                      : 'text-slate-500 hover:text-slate-700'
+                }`}
+                title={!isSheetAllowed ? 'Google Sheets sync is disabled by Administrator' : ''}
+              >
+                {!isSheetAllowed && <Lock className="w-3.5 h-3.5 text-slate-400" />}
+                <span>Google Sheets {!isSheetAllowed ? '(Locked)' : ''}</span>
+              </button>
             </div>
 
             {importSource === 'FILE' ? (

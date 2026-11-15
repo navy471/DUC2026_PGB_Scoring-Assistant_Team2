@@ -1,19 +1,40 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { SharesService } from '../shares/shares.service.js';
 
 @Injectable()
 export class ReportsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private sharesService: SharesService,
+  ) {}
 
-  async getDashboardStats() {
-    const totalStudents = await this.prisma.student.count();
-    const totalAssessments = await this.prisma.assessment.count();
+  async getDashboardStats(user?: any) {
+    const studentWhere: any = {};
+    const assessmentWhere: any = {};
+    const gradeWhere: any = {};
+    const scanWhere: any = {};
+
+    if (user && user.role !== 'ADMIN') {
+      const allowedIds = await this.sharesService.getCollaboratorIds(user.userId);
+      studentWhere.created_by = { in: allowedIds };
+      assessmentWhere.created_by = { in: allowedIds };
+      gradeWhere.Assessment = { created_by: { in: allowedIds } };
+      scanWhere.ScannedPaper = { ScanBatch: { created_by: { in: allowedIds } } };
+    }
+
+    const totalStudents = await this.prisma.student.count({ where: studentWhere });
+    const totalAssessments = await this.prisma.assessment.count({ where: assessmentWhere });
     
     const grades = await this.prisma.grade.findMany({
+      where: gradeWhere,
       include: { Assessment: true }
     });
     const pendingScans = await this.prisma.recognizedResult.count({
-      where: { status: { in: ['PENDING', 'NEEDS_REVIEW', 'CONFIDENT'] } }
+      where: {
+        ...scanWhere,
+        status: { in: ['PENDING', 'NEEDS_REVIEW', 'CONFIDENT'] }
+      }
     });
 
     const totalGraded = grades.length;

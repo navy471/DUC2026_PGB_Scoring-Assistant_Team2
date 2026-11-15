@@ -1,9 +1,13 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { SharesService } from '../shares/shares.service.js';
 
 @Injectable()
 export class VerificationService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private sharesService: SharesService,
+  ) {}
 
   async approveResult(resultId: string, userId: string, finalScore?: number, finalStudentCode?: string) {
     const result = await this.prisma.recognizedResult.findUnique({
@@ -25,8 +29,17 @@ export class VerificationService {
       throw new BadRequestException(`Score cannot exceed maximum score of ${assessment.max_score}`);
     }
 
-    const student = await this.prisma.student.findUnique({ where: { student_code: studentCode } });
-    if (!student) throw new NotFoundException('Student not found');
+    const student = await this.prisma.student.findFirst({
+      where: {
+        OR: [
+          { student_code: studentCode.trim() },
+          { student_code: { equals: studentCode.trim(), mode: 'insensitive' } },
+          { id: studentCode.trim() },
+          { name: { equals: studentCode.trim(), mode: 'insensitive' } }
+        ]
+      }
+    });
+    if (!student) throw new NotFoundException(`Student '${studentCode}' not found in database roster`);
 
     // Duplicate check: does the student already have a grade for this assessment?
     const existingGrade = await this.prisma.grade.findFirst({
@@ -84,6 +97,24 @@ export class VerificationService {
     return grade;
   }
 
+  async approveBatch(resultIds: string[], userId: string) {
+    const results = [];
+    for (const id of resultIds) {
+      try {
+        const grade = await this.approveResult(id, userId);
+        results.push({ id, success: true, gradeId: grade.id });
+      } catch (err: any) {
+        results.push({ id, success: false, error: err.message });
+      }
+    }
+    return {
+      total: resultIds.length,
+      approved: results.filter(r => r.success).length,
+      failed: results.filter(r => !r.success).length,
+      details: results
+    };
+  }
+
   async rejectResult(resultId: string) {
     return this.prisma.recognizedResult.update({
       where: { id: resultId },
@@ -91,9 +122,50 @@ export class VerificationService {
     });
   }
 
-  async getPendingVerifications() {
+  async rejectBatch(resultIds: string[]) {
+    return this.prisma.recognizedResult.updateMany({
+      where: { id: { in: resultIds } },
+      data: { status: 'REJECTED' }
+    });
+  }
+
+  async getPendingVerifications(className?: string, examType?: string, user?: any) {
+    const where: any = {
+      status: { in: ['PENDING', 'NEEDS_REVIEW', 'CONFIDENT'] }
+    };
+
+    if (user && user.role !== 'ADMIN') {
+      const allowedIds = await this.sharesService.getCollaboratorIds(user.userId);
+      where.ScannedPaper = {
+        ScanBatch: { created_by: { in: allowedIds } }
+      };
+    }
+
+    if (className && className !== 'ALL') {
+      where.ScannedPaper = {
+        ...(where.ScannedPaper || {}),
+        ScanBatch: {
+          ...(where.ScannedPaper?.ScanBatch || {}),
+          Assessment: { class_name: className }
+        }
+      };
+    }
+
+    if (examType && examType !== 'ALL') {
+      where.ScannedPaper = {
+        ...(where.ScannedPaper || {}),
+        ScanBatch: {
+          ...(where.ScannedPaper?.ScanBatch || {}),
+          Assessment: {
+            ...(where.ScannedPaper?.ScanBatch?.Assessment || {}),
+            name: { contains: examType, mode: 'insensitive' }
+          }
+        }
+      };
+    }
+
     const results = await this.prisma.recognizedResult.findMany({
-      where: { status: { in: ['PENDING', 'NEEDS_REVIEW', 'CONFIDENT'] } },
+      where,
       include: {
         ScannedPaper: { 
           include: { 
@@ -101,7 +173,8 @@ export class VerificationService {
             ScanBatch: { include: { Assessment: true } } 
           } 
         }
-      }
+      },
+      orderBy: { ScannedPaper: { created_at: 'desc' } }
     });
 
     // Compute dynamic validation warnings for each result

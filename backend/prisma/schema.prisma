@@ -17,6 +17,8 @@ model User {
   created_at DateTime @default(now())
 
   VerificationLogs VerificationLog[]
+  SentShares       DataShareRequest[] @relation("SentShares")
+  ReceivedShares   DataShareRequest[] @relation("ReceivedShares")
 }
 
 model Student {
@@ -32,6 +34,7 @@ model Student {
   phone         String?
   import_source String   @default("MANUAL") // EXCEL, CSV, GOOGLE_SHEET, MANUAL
   status        String   @default("ACTIVE")
+  created_by    String?
   created_at    DateTime @default(now())
   updated_at    DateTime @default(now()) @updatedAt
 
@@ -126,4 +129,16 @@ model VerificationLog {
 
   Grade Grade @relation(fields: [grade_id], references: [id])
   User  User  @relation(fields: [user_id], references: [id])
+}
+
+model DataShareRequest {
+  id          String   @id @default(uuid())
+  sender_id   String
+  receiver_id String
+  status      String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  created_at  DateTime @default(now())
+  updated_at  DateTime @default(now()) @updatedAt
+
+  Sender   User @relation("SentShares", fields: [sender_id], references: [id], onDelete: Cascade)
+  Receiver User @relation("ReceivedShares", fields: [receiver_id], references: [id], onDelete: Cascade)
 }

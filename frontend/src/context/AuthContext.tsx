@@ -49,6 +49,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = (userData: User, jwtToken: string) => {
+    const prevUser = localStorage.getItem('user');
+    if (prevUser) {
+      try {
+        const parsed = JSON.parse(prevUser);
+        if (parsed.id !== userData.id) {
+          sessionStorage.clear();
+        }
+      } catch (e) {}
+    }
     setUser(userData);
     setToken(jwtToken);
     localStorage.setItem('token', jwtToken);
@@ -60,6 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    sessionStorage.clear();
   };
 
   if (loading) return null;

@@ -1,26 +1,45 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { SharesService } from '../shares/shares.service.js';
 import * as xlsx from 'xlsx';
 import axios from 'axios';
 
 @Injectable()
 export class StudentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private sharesService: SharesService,
+  ) {}
 
-  findAll() {
-    return this.prisma.student.findMany({ orderBy: { name: 'asc' } });
+  async findAll(user?: any) {
+    const where: any = {};
+    if (user && user.role !== 'ADMIN') {
+      const allowedIds = await this.sharesService.getCollaboratorIds(user.userId);
+      where.created_by = { in: allowedIds };
+    }
+    return this.prisma.student.findMany({ where, orderBy: { name: 'asc' } });
   }
 
   findOne(id: string) {
     return this.prisma.student.findUnique({ where: { id } });
   }
 
-  findByCode(student_code: string) {
-    return this.prisma.student.findUnique({ where: { student_code } });
+  async findByCode(student_code: string, user?: any) {
+    const where: any = { student_code };
+    if (user && user.role !== 'ADMIN') {
+      const allowedIds = await this.sharesService.getCollaboratorIds(user.userId);
+      where.created_by = { in: allowedIds };
+    }
+    return this.prisma.student.findFirst({ where });
   }
 
-  create(data: any) {
-    return this.prisma.student.create({ data });
+  create(data: any, userId?: string) {
+    return this.prisma.student.create({
+      data: {
+        ...data,
+        created_by: userId || data.created_by
+      }
+    });
   }
 
   update(id: string, data: any) {
@@ -38,28 +57,43 @@ export class StudentsService {
     }
   }
 
-  async renameClass(oldName: string, newName: string) {
+  async renameClass(oldName: string, newName: string, user?: any) {
     if (!newName || !newName.trim()) {
       throw new BadRequestException('New class name is required');
     }
     const cleanNew = newName.trim();
+    const studentWhere: any = { class_name: oldName };
+    const assessmentWhere: any = { class_name: oldName };
+    if (user && user.role !== 'ADMIN') {
+      const allowedIds = await this.sharesService.getCollaboratorIds(user.userId);
+      studentWhere.created_by = { in: allowedIds };
+      assessmentWhere.created_by = { in: allowedIds };
+    }
 
     const studentUpdate = await this.prisma.student.updateMany({
-      where: { class_name: oldName },
+      where: studentWhere,
       data: { class_name: cleanNew }
     });
 
     await this.prisma.assessment.updateMany({
-      where: { class_name: oldName },
+      where: assessmentWhere,
       data: { class_name: cleanNew }
     });
 
     return { success: true, updatedStudents: studentUpdate.count, new_class_name: cleanNew };
   }
 
-  async deleteClass(className: string) {
+  async deleteClass(className: string, user?: any) {
+    const studentWhere: any = { class_name: className };
+    const assessmentWhere: any = { class_name: className };
+    if (user && user.role !== 'ADMIN') {
+      const allowedIds = await this.sharesService.getCollaboratorIds(user.userId);
+      studentWhere.created_by = { in: allowedIds };
+      assessmentWhere.created_by = { in: allowedIds };
+    }
+
     const students = await this.prisma.student.findMany({
-      where: { class_name: className },
+      where: studentWhere,
       select: { id: true }
     });
     const studentIds = students.map(s => s.id);
@@ -86,7 +120,7 @@ export class StudentsService {
       });
 
       const deleteResult = await this.prisma.student.deleteMany({
-        where: { class_name: className }
+        where: studentWhere
       });
 
       return { success: true, deletedStudents: deleteResult.count };
@@ -169,25 +203,77 @@ export class StudentsService {
   }
 
   async parseGoogleSheet(sheetUrl: string) {
-    try {
-      const match = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-      if (!match) throw new BadRequestException('Invalid Google Sheets URL');
-      const sheetId = match[1];
-
-      const exportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
-      
-      const response = await axios.get(exportUrl, { responseType: 'arraybuffer' });
-      const workbook = xlsx.read(response.data, { type: 'buffer' });
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
-      
-      return this.extractDataFromWorksheet(worksheet);
-    } catch (e) {
-      throw new BadRequestException('Failed to fetch Google Sheet. Make sure it is set to "Anyone with link can view".');
+    const match = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+    if (!match) {
+      throw new BadRequestException('តំណភ្ជាប់ Google Sheets មិនត្រឹមត្រូវឡើយ (Invalid Google Sheets URL)');
     }
+    const sheetId = match[1];
+
+    // Extract gid (sheet tab ID) if present in URL
+    const gidMatch = sheetUrl.match(/[#&?]gid=([0-9]+)/);
+    const gid = gidMatch ? gidMatch[1] : null;
+
+    // Strategies to download sheet data:
+    // 1. XLSX export (Preserves exact Unicode/Khmer text encoding, types, numbers)
+    // 2. CSV export with GID
+    // 3. Google Visualization API (often succeeds if export endpoint is rate-limited)
+    const exportUrls = [
+      `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`,
+      `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv${gid ? `&gid=${gid}` : ''}`,
+      `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv${gid ? `&gid=${gid}` : ''}`,
+    ];
+
+    let lastError: any = null;
+    for (const url of exportUrls) {
+      try {
+        const response = await axios.get(url, {
+          responseType: 'arraybuffer',
+          timeout: 15000,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+          },
+          maxRedirects: 5,
+        });
+
+        // Detect if Google returned a sign-in / redirect HTML page (happens when sheet is private)
+        const previewText = Buffer.from(response.data.slice(0, 400)).toString('utf-8').trim();
+        if (
+          previewText.startsWith('<!DOCTYPE html') ||
+          previewText.startsWith('<html') ||
+          previewText.includes('ServiceLogin') ||
+          previewText.includes('accounts.google.com')
+        ) {
+          throw new BadRequestException(
+            'Google Sheet នេះមិនទាន់បានបើកសិទ្ធិសាធារណៈឡើយ។ សូមកំណត់ក្នុង Google Sheets: Share > General access > Anyone with the link (Viewer)!'
+          );
+        }
+
+        const workbook = xlsx.read(response.data, { type: 'buffer' });
+        if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+          continue;
+        }
+
+        // Use the first sheet or the sheet tab
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        return this.extractDataFromWorksheet(worksheet);
+      } catch (err: any) {
+        lastError = err;
+        if (err instanceof BadRequestException) {
+          throw err;
+        }
+      }
+    }
+
+    throw new BadRequestException(
+      lastError?.response?.status === 404
+        ? 'រកមិនឃើញឯកសារ Google Sheet នេះឡើយ (404 Not Found)។ សូមពិនិត្យតំណភ្ជាប់ម្តងទៀត។'
+        : (lastError?.message || 'មិនអាចទាញទិន្នន័យពី Google Sheet បានឡើយ។ សូមប្រាកដថា Google Sheet ត្រូវបានកំណត់ Share ជា "Anyone with the link can view"!')
+    );
   }
 
-  async bulkUpsertStudents(mappedData: any[], fallbackClassName?: string) {
+  async bulkUpsertStudents(mappedData: any[], fallbackClassName?: string, userId?: string) {
     let inserted = 0;
     let updated = 0;
     let failed = 0;
@@ -218,7 +304,8 @@ export class StudentsService {
               academic_year: row.academic_year ? String(row.academic_year) : null,
               email: row.email ? String(row.email) : null,
               phone: row.phone ? String(row.phone) : null,
-              import_source: row.import_source || 'EXCEL'
+              import_source: row.import_source || 'EXCEL',
+              created_by: userId || existing.created_by
             }
           });
           updated++;
@@ -233,7 +320,8 @@ export class StudentsService {
               academic_year: row.academic_year ? String(row.academic_year) : null,
               email: row.email ? String(row.email) : null,
               phone: row.phone ? String(row.phone) : null,
-              import_source: row.import_source || 'EXCEL'
+              import_source: row.import_source || 'EXCEL',
+              created_by: userId || null
             }
           });
           inserted++;
