@@ -11,9 +11,12 @@ import { OcrModule } from './ocr/ocr.module.js';
 import { VerificationModule } from './verification/verification.module.js';
 import { GradesModule } from './grades/grades.module.js';
 import { ReportsModule } from './reports/reports.module.js';
+import { UsersModule } from './users/users.module.js';
+import { SettingsModule } from './settings/settings.module.js';
+import { SharesModule } from './shares/shares.module.js';
 
 @Module({
-  imports: [AuthModule, StudentsModule, SubjectsModule, AssessmentsModule, PrismaModule, ScansModule, OcrModule, VerificationModule, GradesModule, ReportsModule],
+  imports: [AuthModule, UsersModule, SettingsModule, SharesModule, StudentsModule, SubjectsModule, AssessmentsModule, PrismaModule, ScansModule, OcrModule, VerificationModule, GradesModule, ReportsModule],
   controllers: [AppController],
   providers: [AppService],
 })

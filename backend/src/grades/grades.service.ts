@@ -1,13 +1,33 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { SharesService } from '../shares/shares.service.js';
 import * as ExcelJS from 'exceljs';
 
 @Injectable()
 export class GradesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private sharesService: SharesService,
+  ) {}
 
-  findAll() {
+  async findAll(className?: string, examType?: string, user?: any) {
+    const where: any = {};
+    if (user && user.role !== 'ADMIN') {
+      const allowedIds = await this.sharesService.getCollaboratorIds(user.userId);
+      where.Assessment = { created_by: { in: allowedIds } };
+    }
+    if (className && className !== 'ALL') {
+      where.Assessment = { ...(where.Assessment || {}), class_name: className };
+    }
+    if (examType && examType !== 'ALL') {
+      where.Assessment = {
+        ...(where.Assessment || {}),
+        name: { contains: examType, mode: 'insensitive' }
+      };
+    }
+
     return this.prisma.grade.findMany({
+      where,
       include: {
         Assessment: { include: { Subject: true } },
         Student: true,
@@ -16,8 +36,46 @@ export class GradesService {
     });
   }
 
-  async exportGrades() {
-    const grades = await this.findAll();
+  async updateGrade(gradeId: string, score: number, userId: string) {
+    const existing = await this.prisma.grade.findUnique({
+      where: { id: gradeId },
+      include: { Assessment: true }
+    });
+    if (!existing) {
+      throw new Error('Grade not found');
+    }
+    const maxScore = existing.Assessment?.max_score || 100;
+    const percentage = (score / maxScore) * 100;
+
+    const updated = await this.prisma.grade.update({
+      where: { id: gradeId },
+      data: {
+        score,
+        percentage,
+        verified_by: userId,
+        verified_at: new Date()
+      },
+      include: {
+        Assessment: { include: { Subject: true } },
+        Student: true
+      }
+    });
+
+    await this.prisma.verificationLog.create({
+      data: {
+        grade_id: gradeId,
+        old_score: existing.score,
+        new_score: score,
+        action: 'EDITED',
+        user_id: userId
+      }
+    });
+
+    return updated;
+  }
+
+  async exportGrades(className?: string, examType?: string, user?: any) {
+    const grades = await this.findAll(className, examType, user);
 
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('Grades');

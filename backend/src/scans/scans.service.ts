@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { OcrService } from '../ocr/ocr.service.js';
+import { SharesService } from '../shares/shares.service.js';
 
 @Injectable()
 export class ScansService {
   constructor(
     private prisma: PrismaService,
-    private ocrService: OcrService
+    private ocrService: OcrService,
+    private sharesService: SharesService,
   ) {}
 
   async createBatch(assessmentId: string, userId: string, files: Express.Multer.File[]) {
@@ -56,10 +58,26 @@ export class ScansService {
     };
   }
 
-  async getBatches() {
+  async getBatches(user?: any) {
+    const where: any = {};
+    if (user && user.role !== 'ADMIN') {
+      const allowedIds = await this.sharesService.getCollaboratorIds(user.userId);
+      where.created_by = { in: allowedIds };
+    }
     return this.prisma.scanBatch.findMany({
+      where,
       include: { Assessment: true },
       orderBy: { created_at: 'desc' }
     });
+  }
+
+  async quickMatchPreview(file: Express.Multer.File, assessmentId?: string) {
+    let assessmentClass: string | undefined;
+    if (assessmentId) {
+      const ass = await this.prisma.assessment.findUnique({ where: { id: assessmentId } });
+      assessmentClass = ass?.class_name;
+    }
+    const res = await this.ocrService.quickScanPreview(file.path, assessmentClass);
+    return res;
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, UseInterceptors, UploadedFile, BadRequestException, Request } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { StudentsService } from './students.service.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
@@ -9,13 +9,13 @@ export class StudentsController {
   constructor(private readonly studentsService: StudentsService) {}
 
   @Get()
-  findAll() {
-    return this.studentsService.findAll();
+  findAll(@Request() req: any) {
+    return this.studentsService.findAll(req.user);
   }
 
   @Get('lookup/:student_id')
-  async lookup(@Param('student_id') studentId: string) {
-    const student = await this.studentsService.findByCode(studentId);
+  async lookup(@Param('student_id') studentId: string, @Request() req: any) {
+    const student = await this.studentsService.findByCode(studentId, req.user);
     if (!student) {
       return { found: false };
     }
@@ -31,16 +31,16 @@ export class StudentsController {
   }
 
   @Put('class/:className')
-  renameClass(@Param('className') className: string, @Body('new_class_name') newClassName: string) {
+  renameClass(@Param('className') className: string, @Body('new_class_name') newClassName: string, @Request() req: any) {
     if (!newClassName || !newClassName.trim()) {
       throw new BadRequestException('New class name is required');
     }
-    return this.studentsService.renameClass(className, newClassName.trim());
+    return this.studentsService.renameClass(className, newClassName.trim(), req.user);
   }
 
   @Delete('class/:className')
-  deleteClass(@Param('className') className: string) {
-    return this.studentsService.deleteClass(className);
+  deleteClass(@Param('className') className: string, @Request() req: any) {
+    return this.studentsService.deleteClass(className, req.user);
   }
 
   @Get(':id')
@@ -49,8 +49,8 @@ export class StudentsController {
   }
 
   @Post()
-  create(@Body() body: any) {
-    return this.studentsService.create(body);
+  create(@Body() body: any, @Request() req: any) {
+    return this.studentsService.create(body, req.user?.userId);
   }
 
   @Put(':id')
@@ -78,10 +78,10 @@ export class StudentsController {
   }
 
   @Post('confirm-import')
-  async confirmImport(@Body() body: { mapped_data: any[]; class_name?: string }) {
+  async confirmImport(@Body() body: { mapped_data: any[]; class_name?: string }, @Request() req: any) {
     if (!body.mapped_data || !Array.isArray(body.mapped_data)) {
       throw new BadRequestException('Invalid mapped data');
     }
-    return this.studentsService.bulkUpsertStudents(body.mapped_data, body.class_name);
+    return this.studentsService.bulkUpsertStudents(body.mapped_data, body.class_name, req.user?.userId);
   }
 }

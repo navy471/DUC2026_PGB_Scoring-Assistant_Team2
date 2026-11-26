@@ -1,0 +1,18 @@
+{
+  "features": {
+    "allowScanUpload": true,
+    "allowGoogleSheetsSync": true,
+    "allowManualGradeEdit": true,
+    "allowExcelExport": true,
+    "allowStudentRosterEdit": true
+  },
+  "aiConfig": {
+    "confidenceThreshold": 80,
+    "autoApprove": false
+  },
+  "general": {
+    "schoolName": "Digital University of Cambodia (DUC)",
+    "gradingScale": "percentage",
+    "exportFormat": "excel"
+  }
+}
