@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { BookOpen, UserPlus, AlertCircle, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { ThemeToggle } from '../components/ui/ThemeToggle';
 
 export const Register = () => {
   const [name, setName] = useState('');
@@ -67,6 +68,7 @@ export const Register = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 relative overflow-hidden py-10 px-4">
+      <ThemeToggle className="absolute right-4 top-4 z-20" />
       {/* Background Glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[45%] h-[45%] bg-indigo-500/20 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] bg-purple-500/20 rounded-full blur-[100px] pointer-events-none" />

@@ -18,8 +18,9 @@ import {
   Sliders,
   ArrowLeftRight,
   Eye,
-  Crown
+  Crown,
 } from 'lucide-react';
+import { ThemeToggle } from '../ui/ThemeToggle';
 
 export const DashboardLayout = () => {
   const { isAuthenticated, logout, user, token } = useAuth();
@@ -140,6 +141,7 @@ export const DashboardLayout = () => {
         </div>
 
         <div className="flex items-center space-x-2">
+          <ThemeToggle className="border-transparent bg-transparent px-2 text-slate-500 shadow-none hover:bg-slate-100" />
           <button
             onClick={() => setShowNotifications(!showNotifications)}
             className="relative p-2 text-slate-500 hover:text-indigo-600 transition-all rounded-xl hover:bg-slate-100"
@@ -253,6 +255,7 @@ export const DashboardLayout = () => {
 
         {/* User Card & Logout Footer */}
         <div className="p-4 border-t border-slate-100 bg-slate-50/40">
+          <ThemeToggle className="mb-3 w-full" showLabel />
           <div className="flex items-center justify-between mb-3 px-1">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-200 shrink-0">
