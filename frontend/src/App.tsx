@@ -34,7 +34,8 @@ function App() {
         <BrowserRouter>
           <ScanProvider>
             <Routes>
-              <Route path="/login" element={<Login />} />
+              <Route path="/login" element={<Login requiredRole="TEACHER" />} />
+              <Route path="/adminscoring" element={<Login requiredRole="ADMIN" />} />
               <Route path="/register" element={<Register />} />
               <Route element={<DashboardLayout />}>
                 <Route path="/" element={<RootPage />} />
