@@ -131,9 +131,7 @@ export const DashboardLayout = () => {
             <Menu className="w-6 h-6" />
           </button>
           <div className="flex items-center space-x-2">
-            <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center shadow-md shadow-indigo-600/30">
-              <span className="text-white font-bold text-sm">S</span>
-            </div>
+            <img src="/scoring-assistant-icon.webp?v=2" alt="" className="w-8 h-8 object-cover rounded-lg" />
             <span className="font-extrabold text-slate-800 tracking-tight text-base">
               {user?.role === 'ADMIN' && viewMode === 'admin' ? 'Admin Portal' : 'Scoring Assistant'}
             </span>
@@ -176,17 +174,7 @@ export const DashboardLayout = () => {
         {/* Brand Header */}
         <div className="h-16 md:h-20 flex items-center justify-between px-6 border-b border-slate-100">
           <div className="flex items-center">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center mr-3 shadow-lg shrink-0 ${
-              user?.role === 'ADMIN' && viewMode === 'admin' 
-                ? 'bg-purple-600 shadow-purple-600/30' 
-                : 'bg-indigo-600 shadow-indigo-600/30'
-            }`}>
-              {user?.role === 'ADMIN' && viewMode === 'admin' ? (
-                <Shield className="w-4 h-4 text-white" />
-              ) : (
-                <span className="text-white font-bold text-lg">S</span>
-              )}
-            </div>
+            <img src="/scoring-assistant-icon.webp?v=2" alt="" className="w-10 h-10 object-cover rounded-xl mr-3 shrink-0" />
             <div>
               <span className="text-base font-extrabold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent tracking-tight whitespace-nowrap block">
                 {user?.role === 'ADMIN' && viewMode === 'admin' ? 'Admin Portal' : 'Scoring Assistant'}

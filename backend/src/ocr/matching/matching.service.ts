@@ -145,25 +145,7 @@ export class MatchingService {
         }));
     };
 
-    // STRATEGY 1: EXACT / NORMALIZED STUDENT CODE MATCH
-    if (cleanCode && cleanCode !== 'unknown') {
-      for (const s of candidateStudents) {
-        const sCode = this.cleanStr(s.student_code);
-        // Only consider exact match or clean match (avoid partial suffix like 150 matching 2024150 if name conflicts)
-        if (sCode === cleanCode) {
-          return {
-            studentId: s.id,
-            studentCode: s.student_code,
-            studentName: s.name,
-            confidence: 0.99,
-            matchType: 'EXACT_CODE',
-            matchedStudent: s
-          };
-        }
-      }
-    }
-
-    // STRATEGY 2: STUDENT NAME MATCH (Khmer & Transliteration) - Prioritized over ambiguous numbers
+    // STRATEGY 1: STUDENT NAME MATCH (Khmer & Transliteration)
     if (detectedName) {
       const cleanDetName = this.cleanStr(detectedName);
 
@@ -269,6 +251,24 @@ export class MatchingService {
               suggestions: buildSuggestions()
             };
           }
+        }
+      }
+    }
+
+    // STRATEGY 2: EXACT / NORMALIZED STUDENT CODE MATCH (fallback when name is unclear)
+    if (cleanCode && cleanCode !== 'unknown') {
+      for (const s of candidateStudents) {
+        const sCode = this.cleanStr(s.student_code);
+        // Only consider exact match or clean match (avoid partial suffix like 150 matching 2024150 if name conflicts)
+        if (sCode === cleanCode) {
+          return {
+            studentId: s.id,
+            studentCode: s.student_code,
+            studentName: s.name,
+            confidence: 0.99,
+            matchType: 'EXACT_CODE',
+            matchedStudent: s
+          };
         }
       }
     }

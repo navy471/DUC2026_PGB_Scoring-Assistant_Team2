@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
-import { BookOpen } from 'lucide-react';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
 
 type LoginRole = 'ADMIN' | 'TEACHER';
@@ -50,9 +49,11 @@ export const Login = ({ requiredRole = 'TEACHER' }: { requiredRole?: LoginRole }
       
       <div className="w-full max-w-md p-8 glass-panel animate-fade-in relative z-10">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-indigo-500/30 mb-4">
-            <BookOpen className="w-8 h-8 text-white" />
-          </div>
+          <img
+            src="/scoring-assistant-logo.webp?v=2"
+            alt="Scoring Assistant"
+            className="w-40 h-auto max-h-32 object-contain mx-auto mb-4"
+          />
           <h2 className="text-3xl font-bold text-slate-800 tracking-tight">
             {requiredRole === 'ADMIN' ? 'Admin Sign In' : 'Welcome Back'}
           </h2>
@@ -107,7 +108,7 @@ export const Login = ({ requiredRole = 'TEACHER' }: { requiredRole?: LoginRole }
             to={requiredRole === 'ADMIN' ? '/login' : '/adminscoring'}
             className="text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:underline"
           >
-            {requiredRole === 'ADMIN' ? 'Teacher Login' : 'Admin Login'}
+            {/* {requiredRole === 'ADMIN' ? 'Teacher Login' : 'Admin Login'} */}
           </Link>
         </div>
 

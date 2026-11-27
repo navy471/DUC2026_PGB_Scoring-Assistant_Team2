@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { BookOpen, UserPlus, AlertCircle, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { UserPlus, AlertCircle, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
 
@@ -76,9 +76,11 @@ export const Register = () => {
       <div className="w-full max-w-md p-8 glass-panel animate-fade-in relative z-10 bg-white/80 backdrop-blur-xl border border-slate-200/80 shadow-2xl rounded-3xl">
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-indigo-500/30 mb-4">
-            <BookOpen className="w-8 h-8 text-white" />
-          </div>
+          <img
+            src="/scoring-assistant-logo.webp?v=2"
+            alt="Scoring Assistant"
+            className="w-36 h-auto max-h-28 object-contain mx-auto mb-4"
+          />
           <h2 className="text-2xl font-black text-slate-800 tracking-tight">បង្កើតគណនី</h2>
           <p className="text-slate-500 text-sm mt-2">បញ្ចូលព័ត៌មានដើម្បីចុះឈ្មោះ</p>
         </div>
