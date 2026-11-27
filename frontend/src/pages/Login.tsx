@@ -107,7 +107,7 @@ export const Login = ({ requiredRole = 'TEACHER' }: { requiredRole?: LoginRole }
             to={requiredRole === 'ADMIN' ? '/login' : '/adminscoring'}
             className="text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:underline"
           >
-            {requiredRole === 'ADMIN' ? 'Teacher Login' : 'Admin Login'}
+            {/* {requiredRole === 'ADMIN' ? 'Teacher Login' : 'Admin Login'} */}
           </Link>
         </div>
 
