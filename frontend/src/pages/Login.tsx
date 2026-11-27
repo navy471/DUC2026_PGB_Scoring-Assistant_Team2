@@ -4,9 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { BookOpen } from 'lucide-react';
 
-export const Login = () => {
-  const [email, setEmail] = useState('teacher@example.com');
-  const [password, setPassword] = useState('password123');
+type LoginRole = 'ADMIN' | 'TEACHER';
+
+export const Login = ({ requiredRole = 'TEACHER' }: { requiredRole?: LoginRole }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -19,6 +21,11 @@ export const Login = () => {
         email,
         password,
       });
+      if (response.data.user.role !== requiredRole) {
+        const roleName = requiredRole === 'ADMIN' ? 'Admin' : 'Teacher';
+        alert(`គណនីនេះមិនមានសិទ្ធិជា ${roleName} ទេ (This account cannot sign in here).`);
+        return;
+      }
       login(response.data.user, response.data.access_token);
       navigate('/');
     } catch (error: any) {
@@ -44,8 +51,12 @@ export const Login = () => {
           <div className="w-16 h-16 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-indigo-500/30 mb-4">
             <BookOpen className="w-8 h-8 text-white" />
           </div>
-          <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Welcome Back</h2>
-          <p className="text-slate-500 mt-2">Sign in to Scoring Assistant</p>
+          <h2 className="text-3xl font-bold text-slate-800 tracking-tight">
+            {requiredRole === 'ADMIN' ? 'Admin Sign In' : 'Welcome Back'}
+          </h2>
+          <p className="text-slate-500 mt-2">
+            {requiredRole === 'ADMIN' ? 'Sign in to Admin Portal' : 'Sign in to Scoring Assistant'}
+          </p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-5">
@@ -78,45 +89,26 @@ export const Login = () => {
           </button>
         </form>
 
-        <div className="mt-4 text-center">
-          <p className="text-xs text-slate-600 font-medium">
-            មិនទាន់មានគណនីមែនទេ?{' '}
-            <Link
-              to="/register"
-              className="font-bold text-indigo-600 hover:text-indigo-700 hover:underline ml-1"
-            >
-              បង្កើតគណនីថ្មី (Create Account)
-            </Link>
-          </p>
+        <div className="mt-4 text-center space-y-2">
+          {requiredRole === 'TEACHER' && (
+            <p className="text-xs text-slate-600 font-medium">
+              មិនទាន់មានគណនីមែនទេ?{' '}
+              <Link
+                to="/register"
+                className="font-bold text-indigo-600 hover:text-indigo-700 hover:underline ml-1"
+              >
+                បង្កើតគណនីថ្មី (Create Account)
+              </Link>
+            </p>
+          )}
+          <Link
+            to={requiredRole === 'ADMIN' ? '/login' : '/adminscoring'}
+            className="text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:underline"
+          >
+            {requiredRole === 'ADMIN' ? 'Teacher Login' : 'Admin Login'}
+          </Link>
         </div>
 
-        <div className="mt-6 pt-5 border-t border-slate-200/80">
-          <p className="text-xs font-semibold text-slate-500 mb-2.5 text-center">គណនីសម្រាប់សាកល្បងចូល (Quick Fill Test Accounts):</p>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <button
-              type="button"
-              onClick={() => {
-                setEmail('admin@duc.edu.kh');
-                setPassword('admin123');
-              }}
-              className="p-2.5 rounded-xl border border-indigo-200 bg-indigo-50/60 hover:bg-indigo-100/70 text-indigo-700 font-bold transition-all text-left flex flex-col"
-            >
-              <span className="flex items-center gap-1 font-extrabold">👑 គណនី Admin</span>
-              <span className="text-[10px] text-indigo-500 font-mono mt-0.5">admin@duc.edu.kh</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEmail('teacher@example.com');
-                setPassword('password123');
-              }}
-              className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all text-left flex flex-col"
-            >
-              <span className="flex items-center gap-1 font-extrabold">👨‍🏫 គណនី Teacher</span>
-              <span className="text-[10px] text-slate-500 font-mono mt-0.5">teacher@example.com</span>
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );

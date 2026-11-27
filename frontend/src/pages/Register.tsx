@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { BookOpen, UserPlus, CheckCircle2, AlertCircle, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { BookOpen, UserPlus, AlertCircle, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const Register = () => {
@@ -21,22 +21,22 @@ export const Register = () => {
     setError('');
 
     if (!name.trim()) {
-      setError('សូមបញ្ចូលឈ្មោះពេញរបស់អ្នក (Please enter your full name)');
+      setError('សូមបញ្ចូលឈ្មោះពេញ។');
       return;
     }
 
     if (!email.trim()) {
-      setError('សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែល (Please enter your email)');
+      setError('សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែល។');
       return;
     }
 
     if (password.length < 6) {
-      setError('ពាក្យសម្ងាត់ត្រូវមានយ៉ាងហោចណាស់ ៦ តួអក្សរ (Password must be at least 6 characters)');
+      setError('ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៦ តួអក្សរ។');
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('ពាក្យសម្ងាត់ទាំងពីរមិនដូចគ្នាទេ (Passwords do not match)');
+      setError('ពាក្យសម្ងាត់មិនត្រូវគ្នា។');
       return;
     }
 
@@ -56,7 +56,7 @@ export const Register = () => {
       navigate('/');
     } catch (err: any) {
       if (err.response?.status === 409) {
-        setError(`អ៊ីមែល ${email} ត្រូវបានចុះឈ្មោះរួចហើយ! សូមប្រើអ៊ីមែលផ្សេង ឬចូលប្រើ (Email is already registered)`);
+        setError('អ៊ីមែលនេះមានគណនីរួចហើយ។ សូមប្រើអ៊ីមែលផ្សេង ឬចូលគណនី។');
       } else {
         setError(err.response?.data?.message || 'ការចុះឈ្មោះមិនបានសម្រេច សូមព្យាយាមម្តងទៀត។');
       }
@@ -77,12 +77,8 @@ export const Register = () => {
           <div className="w-16 h-16 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-indigo-500/30 mb-4">
             <BookOpen className="w-8 h-8 text-white" />
           </div>
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight">
-            បង្កើតគណនីថ្មី (Create Account)
-          </h2>
-          <p className="text-slate-500 text-xs mt-1">
-            ចុះឈ្មោះដើម្បីប្រើប្រាស់ប្រព័ន្ធស្គែន និងបញ្ចូលពិន្ទុស្វ័យប្រវត្តិ
-          </p>
+          <h2 className="text-2xl font-black text-slate-800 tracking-tight">បង្កើតគណនី</h2>
+          <p className="text-slate-500 text-sm mt-2">បញ្ចូលព័ត៌មានដើម្បីចុះឈ្មោះ</p>
         </div>
 
         {/* Error Alert */}
@@ -96,13 +92,11 @@ export const Register = () => {
         <form onSubmit={handleRegister} className="space-y-4">
           {/* Full Name */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              ឈ្មោះពេញ (Full Name) *
-            </label>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">ឈ្មោះពេញ *</label>
             <input
               type="text"
               required
-              placeholder="e.g. Dr. Sokha Chan"
+              placeholder="បញ្ចូលឈ្មោះពេញ"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white/70"
@@ -111,13 +105,11 @@ export const Register = () => {
 
           {/* Email */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              អ៊ីមែល (Email Address) *
-            </label>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">អ៊ីមែល *</label>
             <input
               type="email"
               required
-              placeholder="e.g. sokha@duc.edu.kh"
+              placeholder="name@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white/70"
@@ -126,14 +118,11 @@ export const Register = () => {
 
           {/* Password */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              ពាក្យសម្ងាត់ (Password - យ៉ាងតិច ៦ ខ្ទង់) *
-            </label>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">ពាក្យសម្ងាត់ *</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
-                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white/70 pr-10"
@@ -147,17 +136,15 @@ export const Register = () => {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+            <p className="mt-1.5 text-xs text-slate-500">ត្រូវមានយ៉ាងតិច ៦ តួអក្សរ</p>
           </div>
 
           {/* Confirm Password */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              បញ្ជាក់ពាក្យសម្ងាត់ (Confirm Password) *
-            </label>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">បញ្ជាក់ពាក្យសម្ងាត់ *</label>
             <input
               type={showPassword ? 'text' : 'password'}
               required
-              placeholder="••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white/70"
@@ -165,9 +152,9 @@ export const Register = () => {
           </div>
 
           {/* Role Notice */}
-          <div className="p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl flex items-center space-x-2 text-indigo-800 text-[11px]">
+          <div className="p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl flex items-center gap-2.5 text-indigo-800 text-sm">
             <ShieldCheck className="w-4 h-4 text-indigo-600 shrink-0" />
-            <span>គណនីថ្មីរបស់អ្នកនឹងទទួលបានសិទ្ធិជា <strong>👨‍🏫 គ្រូបង្រៀន (Teacher)</strong> ដោយស្វ័យប្រវត្តិ។</span>
+            <span>គណនីថ្មីនឹងមានសិទ្ធិជា <strong>គ្រូបង្រៀន</strong></span>
           </div>
 
           {/* Submit Button */}
@@ -177,19 +164,19 @@ export const Register = () => {
             className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:-translate-y-0.5 transition-all duration-200 text-sm flex items-center justify-center space-x-2 mt-2"
           >
             <UserPlus className="w-4 h-4" />
-            <span>{loading ? 'កំពុងបង្កើតគណនី...' : 'ចុះឈ្មោះបង្កើតគណនី (Sign Up)'}</span>
+            <span>{loading ? 'កំពុងបង្កើត...' : 'បង្កើតគណនី'}</span>
           </button>
         </form>
 
         {/* Footer / Switch to Login */}
         <div className="mt-6 pt-5 border-t border-slate-200/80 text-center">
           <p className="text-xs text-slate-600 font-medium">
-            មានគណនីរួចហើយមែនទេ?{' '}
+            មានគណនីរួចហើយ?{' '}
             <Link
               to="/login"
               className="font-bold text-indigo-600 hover:text-indigo-700 hover:underline ml-1"
             >
-              ចូលប្រើប្រាស់ (Sign In)
+              ចូលគណនី
             </Link>
           </p>
         </div>
