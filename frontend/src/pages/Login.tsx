@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { BookOpen } from 'lucide-react';
+import { ThemeToggle } from '../components/ui/ThemeToggle';
 
 type LoginRole = 'ADMIN' | 'TEACHER';
 
@@ -43,6 +44,7 @@ export const Login = ({ requiredRole = 'TEACHER' }: { requiredRole?: LoginRole }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 relative overflow-hidden">
+      <ThemeToggle className="absolute right-4 top-4 z-20" />
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/20 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-violet-500/20 rounded-full blur-[100px] pointer-events-none" />
       
